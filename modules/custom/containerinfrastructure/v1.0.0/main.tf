@@ -22,7 +22,7 @@ module "virtual_network" {
   source = "../../../common/azurerm_virtual_network/v1.0.0"
   virtual_network_name = "vnet-${random_string.deployment_string.result}"
   virtual_network_address_space = ["10.0.0.0/16"]
-  resource_group_name = var.resource_group_name
+  resource_group_name = module.resource_group.name
   location = var.location
   common_tags = var.common_tags
 }
