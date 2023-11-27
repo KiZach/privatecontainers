@@ -104,3 +104,11 @@ resource "azurerm_subnet_nat_gateway_association" "nat_gateway_subnet_containera
   subnet_id      = module.subnet_containerapps.id
   nat_gateway_id = module.nat_gateway.id
 }
+
+module "log_analytics_workspace" {
+  source = "../../../common/azurerm_log_analytics_workspace/v1.0.0"
+  log_analytics_workspace_name = "la-${random_string.deployment_string.result}"
+  resource_group_name = module.resource_group.name
+  location = var.location
+  common_tags = var.common_tags
+}
