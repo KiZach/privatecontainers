@@ -39,7 +39,7 @@ variable "frontend_ip_configuration" {
 variable "backend_address_pools" {
   type        = list(map(string))
   description = "List of objects that represent the configuration of each backend address pool."
-  # backend_address_pools = [{ name = "", ip_addresses = "" }]
+  # backend_address_pools = [{ name = "", fqdns = "" }]
 }
 variable "identity_id" {
   type        = string
@@ -66,13 +66,24 @@ variable "probes" {
 variable "backend_http_settings" {
   type        = list(map(string))
   description = "List of objects that represent the configuration of each backend http settings."
-  # backend_http_settings = [{ name = "", port = "", protocol = "", request_timeout = "", host_name = "", probe_name = "" }]
+  # backend_http_settings = [{ name = "", port = "", protocol = "", request_timeout = "", host_name = "", probe_name = "", path = "", pick_host_name_from_backend_address = false }]
 }
 variable "request_routing_rules" {
   type        = list(map(string))
   description = "List of objects that represent the configuration of each backend request routing rule."
-  # request_routing_rules = [{ name = "", http_listener_name = "", backend_address_pool_name = "", backend_http_settings_name = "" }]
+  # request_routing_rules = [{ name = "", http_listener_name = "", priority = "", url_path_map_name, "" }]
 }
+variable "url_path_maps" {
+  type        = list(map(string))
+  description = "List of objects that represent the configuration of each url_path_map."
+  # url_path_maps = [{ name = "", default_backend_address_pool_name = "", default_backend_http_settings_name = "" }]
+}
+variable "url_path_map_path_rules" {
+  type        = list(map(string))
+  description = "List of objects that represent the configuration of each url_path_map."
+  # url_path_map_path_rules = [{ name = "", path = "", backend_address_pool_name = "", backend_http_settings_name = "" }]
+}
+
 variable "tags" {
   type        = map(string)
   default     = {}

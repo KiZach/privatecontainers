@@ -53,7 +53,7 @@ resource "azurerm_application_gateway" "appgw" {
     for_each = var.backend_address_pools
     content {
       name         = backend_address_pool.value.name
-      ip_addresses = lookup(backend_address_pool.value, "ip_addresses", "") == "" ? null : split(",", backend_address_pool.value.ip_addresses)
+      fqdns        = lookup(backend_address_pool.value, "fqdns", "") == "" ? null : split(",", backend_address_pool.value.fqdns)
     }
   }
 
@@ -114,12 +114,14 @@ resource "azurerm_application_gateway" "appgw" {
     for_each = var.backend_http_settings
     content {
       cookie_based_affinity = "Disabled"
-      name                  = backend_http_settings.value.name
-      port                  = backend_http_settings.value.port
-      protocol              = backend_http_settings.value.protocol
-      request_timeout       = backend_http_settings.value.request_timeout
-      host_name             = lookup(backend_http_settings.value, "host_name", null)
-      probe_name            = lookup(backend_http_settings.value, "probe_name", null)
+      name                                = backend_http_settings.value.name
+      port                                = backend_http_settings.value.port
+      protocol                            = backend_http_settings.value.protocol
+      request_timeout                     = backend_http_settings.value.request_timeout
+      host_name                           = lookup(backend_http_settings.value, "host_name", null)
+      probe_name                          = lookup(backend_http_settings.value, "probe_name", null)
+      path                                = lookup(backend_http_settings.value, "path", null)
+      pick_host_name_from_backend_address = lookup(backend_http_settings.value, "pick_host_name_from_backend_address", null)
     }
   }
 
@@ -127,13 +129,55 @@ resource "azurerm_application_gateway" "appgw" {
     for_each = var.request_routing_rules
     content {
       name                       = request_routing_rule.value.name
-      rule_type                  = "Basic"
+      rule_type                  = "PathBasedRouting"
       http_listener_name         = request_routing_rule.value.http_listener_name
-      backend_address_pool_name  = request_routing_rule.value.backend_address_pool_name
-      backend_http_settings_name = request_routing_rule.value.backend_http_settings_name
       priority                   = request_routing_rule.value.priority
+      url_path_map_name          = request_routing_rule.value.url_path_map_name
+    }
+  }
+
+  dynamic "url_path_map" {
+    for_each = var.url_path_maps
+    content {
+      name = url_path_map.value.name
+      default_backend_address_pool_name = url_path_map.value.default_backend_address_pool_name
+      default_backend_http_settings_name = url_path_map.value.default_backend_http_settings_name
+    dynamic "path_rule" {
+      for_each = var.url_path_map_path_rules
+      content {
+        name = path_rule.value.name
+        paths = [path_rule.value.path]
+        backend_address_pool_name = path_rule.value.backend_address_pool_name
+        backend_http_settings_name = path_rule.value.backend_http_settings_name
+      }
+    }
     }
   }
 
   tags = var.tags
 }
+
+# Path based Routing Rule
+#  request_routing_rule {
+#    name                       = local.request_routing_rule1_name
+#    rule_type                  = "PathBasedRouting"
+#    http_listener_name         = local.listener_name
+#    url_path_map_name           = local.url_path_map        
+#}
+
+# URL Path Map - Define Path based Routing    
+#  url_path_map {
+#    name = local.url_path_map  
+#    default_redirect_configuration_name = local.redirect_configuration_name
+#    path_rule {
+#      name = "app1-rule"
+#      paths = ["/app1/*"]
+#      backend_address_pool_name = local.backend_address_pool_name_app1
+#      backend_http_settings_name = local.http_setting_name_app1
+#    }
+#    path_rule {
+#      name = "app2-rule"
+#     paths = ["/app2/*"]
+#     backend_address_pool_name = local.backend_address_pool_name_app2
+#    }    
+#  }
